@@ -48,7 +48,7 @@ Face à cette réduction du vivier de candidats, quelles sont les opportunités 
 
 ## Introduction au Nettoyage
 
-Ce notebook nettoie et standardise les données des filières universitaires en Tunisie. L'effort de nettoyage est l'aspect le plus critique de ce projet. Les données brutes collectées depuis le Portail Officiel de l'Orientation (RNU) étaient particulièrement complexes et nécessitaient un traitement approfondi pour être exploitables.
+Cette Partie  nettoie et standardise les données des filières universitaires en Tunisie. L'effort de nettoyage est l'aspect le plus critique de ce projet. Les données brutes collectées depuis le Portail Officiel de l'Orientation (RNU) étaient particulièrement complexes et nécessitaient un traitement approfondi pour être exploitables.
 
 ### Les défis majeurs identifiés :
 
