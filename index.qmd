@@ -1,0 +1,1277 @@
+---
+title: "Analyse Stratégique : Bac Lettres Tunisie 2025"
+subtitle: "Opportunités face à la chute du taux de réussite au Baccalauréat"
+author: "Maroua Hattab"
+date: today
+format:
+  html:
+    code-tools: true
+    code-fold: show
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    theme: cosmo
+    embed-resources: true
+    number-sections: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Introduction : Le Contexte du Défi
+
+## Une Baisse Alarmante du Taux de Réussite au Baccalauréat Lettres
+
+Le système éducatif tunisien fait face à un défi majeur en 2025 : **le taux de réussite au baccalauréat section Lettres connaît une chute significative**.
+
+| Session | Taux de Réussite | Évolution |
+|---------|-----------------|-----------|
+| **2024** | 44.33% | - |
+| **2025** | 39.10% | **-5.23 points** |
+
+Cette baisse de plus de **5 points de pourcentage** représente une diminution relative de **11.8%** du nombre de bacheliers lettres potentiels.
+
+### Questions Clés de cette Analyse
+
+Face à cette réduction du vivier de candidats, quelles sont les opportunités qui s'offrent réellement aux bacheliers lettres en Tunisie ?
+
+1. **Accessibilité** : Quelles filières ont des scores d'entrée plus accessibles en 2025 vs 2024 ?
+2. **Répartition géographique** : Comment les offres sont-elles distribuées sur le territoire tunisien ?
+3. **Diversité des formations** : Quels domaines et spécialisations sont disponibles ?
+4. **Conditions d'admission** : Quelles contraintes spécifiques (sport, langue, âge) peuvent limiter l'accès ?
+5. **Tendances** : Les scores d'orientation baissent-ils parallèlement au taux de réussite ?
+
+---
+
+# Phase I : Nettoyage et Préparation des Données
+
+## Introduction au Nettoyage
+
+Ce notebook nettoie et standardise les données des filières universitaires en Tunisie. L'effort de nettoyage est l'aspect le plus critique de ce projet. Les données brutes collectées depuis le Portail Officiel de l'Orientation (RNU) étaient particulièrement complexes et nécessitaient un traitement approfondi pour être exploitables.
+
+### Les défis majeurs identifiés :
+
+- **Méta-données corrompues** : Les noms de colonnes contenaient des sauts de ligne (`\n`) et des tabulations (`\t`) rendant impossible l'appel des variables dans le code.
+- **Incohérence textuelle** : Des variantes comme "l en sc. infirmieres" vs "Licence en Sciences Infirmières" créaient des doublons artificiels.
+- **Valeurs vides ambiguës** : Utilisation de termes comme "Rien" ou "03 ans" dans des colonnes de conditions d'éligibilité.
+
+```{r setup, include=FALSE}
+# Installation des packages si nécessaire (décommenter si besoin)
+# install.packages(c("readxl", "dplyr", "stringr", "tidyr", "ggplot2", "scales", "knitr", "kableExtra", "viridis"))
+
+# Chargement des bibliothèques
+library(readxl)    # Pour lire les fichiers Excel
+library(dplyr)     # Pour la manipulation des données
+library(stringr)   # Pour la manipulation des chaînes
+library(tidyr)     # Pour le nettoyage des données
+library(ggplot2)   # Visualisations
+library(scales)    # Formatage des axes
+library(knitr)     # Tableaux formatés
+library(viridis)   # Palettes de couleurs accessibles
+
+# Configuration des thèmes
+theme_set(theme_minimal(base_size = 12))
+
+# Palette de couleurs personnalisée
+couleurs <- c("#2E86AB", "#A23B72", "#F18F01", "#C73E1D", "#3B1F2B", "#44AF69")
+```
+
+## 1. Chargement des bibliothèques
+
+```{r load-libraries}
+# Chargement des bibliothèques
+library(readxl)    # Pour lire les fichiers Excel
+library(dplyr)     # Pour la manipulation des données
+library(stringr)   # Pour la manipulation des chaînes
+library(tidyr)     # Pour le nettoyage des données
+cat("Bibliothèques chargées avec succès\n")
+```
+
+## 2. Chargement des données
+
+```{r load-data}
+# Lecture du fichier Excel
+df <- read_excel("Data/data.xlsx", sheet = 1)
+
+# Affichage de la structure
+cat("Dimensions initiales:", nrow(df), "lignes x", ncol(df), "colonnes\n")
+cat("\nNoms des colonnes originales:\n")
+print(colnames(df))
+```
+
+**Observation** : Les données brutes contiennent 240 lignes et 10 colonnes. Les noms de colonnes contiennent des caractères spéciaux (sauts de ligne, tabulations) qui nécessitent un nettoyage.
+
+## 3. Nettoyage des noms de colonnes
+
+```{r clean-column-names}
+# Suppression des sauts de ligne, tabulations, espaces multiples et deux-points
+colnames(df) <- colnames(df) %>%
+  str_replace_all("\n", " ") %>%       # Remplacer \n par espace
+  str_replace_all("\t", " ") %>%       # Remplacer \t par espace
+  str_replace_all(":", "") %>%         # Supprimer les :
+  str_replace_all("\\s+", " ") %>%     # Remplacer espaces multiples
+  str_trim()                            # Supprimer espaces début/fin
+
+cat("Nouveaux noms de colonnes:\n")
+print(colnames(df))
+```
+
+**Observation** : Après nettoyage, les noms de colonnes sont standardisés et exploitables. Les caractères spéciaux ont été supprimés.
+
+## 4. Nettoyage de la colonne 'Filiere'
+
+```{r clean-filiere}
+# Suppression des lignes avec Filiere vide
+df <- df %>% filter(!is.na(Filiere))
+
+# Nettoyage de base
+df <- df %>%
+  mutate(Filiere = Filiere %>%
+           str_replace_all("\n", " ") %>%
+           str_replace_all("\\s+", " ") %>%
+           str_trim() %>%
+           tolower())
+
+# Standardisation du préfixe "L EN"
+df <- df %>%
+  mutate(Filiere = str_replace(Filiere, "^l\\.?\\s*en\\s*", "l en "))
+
+# Corrections d'abréviations
+df <- df %>%
+  mutate(Filiere = str_replace(Filiere, "l en sc\\. infirmieres", "l en sciences infirmieres"),
+         Filiere = str_replace(Filiere, "l en tech\\.", "l en techniques"))
+
+cat("Nombre de filières uniques après nettoyage:", length(unique(df$Filiere)), "\n")
+```
+
+**Observation** : Après nettoyage initial, nous avons 71 filières uniques. Cependant, certaines variantes nécessitent encore une standardisation.
+
+```{r map-filiere}
+# Mapping des filières vers des noms cohérents
+filiere_mapping <- c(
+  'l en sciences de l education' = 'l en sciences de l éducation',
+  'l en science et techniques des activités physiques et sportives' = 'l en sciences physiques et sportives',
+  'l en physiothérapie' = 'l en santé: physiothérapie',
+  'l en orthophonie' = 'l en santé: orthophonie',
+  'l en nutrition humaine' = 'l en santé: nutrition',
+  'l en ergothérapie' = 'l en santé: ergothérapie',
+  'l en puériculture' = 'l en santé: puériculture',
+  'l en sciences maïeutiques sage femme' = 'l en santé: sage-femme',
+  'l en documentbibliothéconomie et archiv' = 'l en documentation et bibliothéconomie',
+  'l en gestion élect de l infor et des docu' = 'l en gestion informatique documentaire',
+  'l en médiation et animation' = 'l en médiation culturelle',
+  'l en théa arts de la scène' = 'l en théâtre et arts de la scène',
+  'prépalettre spécialité arabe' = 'prépa lettres arabe',
+  'prépalettre spécialité français' = 'prépa lettres français',
+  'prépalettre spécialité anglais' = 'prépa lettres anglais',
+  'cycle prépasciences humaines histoire' = 'cycle prépa sciences humaines histoire',
+  'cycle prépasciences humaines géographie' = 'cycle prépa sciences humaines géographie',
+  'cycle prépasciences humaines philosophie' = 'cycle prépa sciences humaines philosophie',
+  'l en arts du patrimoine islamique' = 'l en patrimoine islamique',
+  'l en science islamique' = 'l en sciences islamiques',
+  'l en géographie de lenvironnement' = 'l en géographie de l environnement',
+  'l en techniques agroalimentaires et envir' = 'l en techniques agroalimentaires et environnement'
+)
+
+# Application du mapping
+for (old_name in names(filiere_mapping)) {
+  df <- df %>%
+    mutate(Filiere = if_else(Filiere == old_name, filiere_mapping[old_name], Filiere))
+}
+
+cat("Mapping appliqué avec succès\n")
+```
+
+**Conclusion** : La standardisation des noms de filières permet d'éviter les doublons et facilite les analyses ultérieures.
+
+## 5. Nettoyage de la colonne 'Université'
+
+```{r clean-universite}
+df <- df %>%
+  mutate(Université = Université %>%
+           str_replace_all("\n", " ") %>%
+           str_trim() %>%
+           tolower())
+
+cat("Universités uniques:\n")
+print(unique(df$Université))
+```
+
+**Observation** : 12 universités sont représentées dans les données, avec des noms parfois contenant des retours à la ligne qui ont été nettoyés.
+
+## 6. Nettoyage de la colonne 'Etablissement'
+
+```{r clean-etablissement}
+df <- df %>%
+  mutate(Etablissement = Etablissement %>%
+           str_replace_all("\n", " ") %>%
+           str_replace_all("\t", " ") %>%
+           str_trim() %>%
+           tolower())
+
+# Correction spécifique
+df <- df %>%
+  mutate(Etablissement = str_replace(Etablissement, 
+                                     'faculté de médecine â€" tunis', 
+                                     'faculté de médecine de tunis'))
+
+cat("Nombre d'établissements uniques:", length(unique(df$Etablissement)), "\n")
+```
+
+**Observation** : 83 établissements uniques sont identifiés après nettoyage.
+
+## 7. Nettoyage de la colonne 'Gouvernorat'
+
+```{r clean-gouvernorat}
+df <- df %>%
+  mutate(Gouvernorat = Gouvernorat %>%
+           str_trim() %>%
+           str_to_title())  # Première lettre en majuscule
+
+cat("Gouvernorats uniques:\n")
+print(unique(df$Gouvernorat))
+```
+
+**Observation** : 19 gouvernorats sont représentés, avec une standardisation de la casse pour faciliter les analyses géographiques.
+
+## 8. Nettoyage de la colonne 'Critères'
+
+```{r clean-criteres}
+df <- df %>%
+  mutate(Critères = Critères %>%
+           str_replace_all("\n", "") %>%
+           str_trim() %>%
+           toupper())
+
+cat("Critères uniques:\n")
+print(unique(df$Critères))
+```
+
+**Observation** : 26 formules de critères différentes sont utilisées pour calculer les scores d'orientation, toutes standardisées en majuscules.
+
+## 9. Nettoyage de la colonne 'Durée des Etudes'
+
+```{r clean-duree}
+# Remplissage des valeurs manquantes
+df <- df %>%
+  mutate(`Durée des Etudes` = if_else(is.na(`Durée des Etudes`), "03 ans", `Durée des Etudes`))
+
+# Uniformisation du format
+df <- df %>%
+  mutate(`Durée des Etudes` = `Durée des Etudes` %>%
+           str_replace_all("\\s+", " ") %>%
+           str_trim() %>%
+           str_replace("03  ans", "03 ans"))
+
+cat("Durées d'études uniques:\n")
+print(unique(df$`Durée des Etudes`))
+```
+
+**Observation** : Quatre durées d'études sont identifiées : 02 ans, 03 ans, 06 ans, et 09 ans. La majorité des filières (93.3%) durent 3 ans.
+
+## 10. Vérification et nettoyage des scores (2025 et 2024)
+
+```{r identify-score-columns}
+# Afficher les noms exacts des colonnes pour diagnostic
+cat("Noms de colonnes contenant 'Orient':\n")
+print(grep("Orient", colnames(df), value = TRUE, ignore.case = TRUE))
+
+# Identifier les colonnes de scores
+col_2025 <- grep("2025", colnames(df), value = TRUE)[1]
+col_2024 <- grep("2024", colnames(df), value = TRUE)[1]
+
+cat("\nColonne 2025 détectée:", col_2025, "\n")
+cat("Colonne 2024 détectée:", col_2024, "\n")
+```
+
+```{r clean-scores}
+# Remplissage des valeurs manquantes par 0
+# Utilisation de la notation avec crochets doubles pour éviter les problèmes d'accents
+df[[col_2025]] <- ifelse(is.na(df[[col_2025]]), 0, df[[col_2025]])
+df[[col_2024]] <- ifelse(is.na(df[[col_2024]]), 0, df[[col_2024]])
+
+cat("\nValeurs manquantes remplacées par 0\n")
+
+# Affichage des statistiques
+cat("\nScore 2025 - min:", min(df[[col_2025]], na.rm = TRUE), 
+    "max:", max(df[[col_2025]], na.rm = TRUE), "\n")
+cat("Score 2024 - min:", min(df[[col_2024]], na.rm = TRUE), 
+    "max:", max(df[[col_2024]], na.rm = TRUE), "\n")
+```
+
+**Observation** : Les scores varient de 0 à 173.22 en 2025 et de 0 à 182.91 en 2024. Les valeurs manquantes ont été remplacées par 0 pour les nouvelles filières ou celles sans données.
+
+## 11. Nettoyage de la colonne 'Conditions'
+
+```{r clean-conditions}
+# Mapping des conditions
+conditions_map <- c(
+  'Rien' = 'aucune',
+  '03 ans' = 'aucune',
+  'Sport exigé' = 'sport obligatoire',
+  'Sport exigé, sport>=16' = 'sport obligatoire >=16',
+  'SVT exigée' = 'svt obligatoire',
+  'Option S.V.T et Sport Obligatoires' = 'svt et sport obligatoires',
+  'Filière Pour sexe Feminin et Option S.V.T. Obligatoire' = 'svt obligatoire, sexe féminin',
+  'Filière Pour Sexe Feminin et Option S.V.T. Obligatoire et sport obligatoire' = 'svt et sport obligatoires, sexe féminin',
+  'Filière Pour Sexe Masculin et Option S.V.T. Obligatoire et sport obligatoire' = 'svt et sport obligatoires, sexe masculin',
+  'Réservée aux admis des lycées pour non-voyants, avec SVT et sport obligatoires' = 'svt et sport obligatoires, non-voyant',
+  'Espagnol exigé' = 'langue obligatoire : espagnol',
+  'Italien exigé' = 'langue obligatoire : italien',
+  'Allemand exigé' = 'langue obligatoire : allemand',
+  'Âge inférieur à 20 ans au 01 septembre' = 'âge limite',
+  'age<=21 ans au premier octobre' = 'âge limite'
+)
+
+# Application du mapping
+df <- df %>%
+  mutate(Conditions = recode(Conditions, !!!conditions_map))
+
+cat("Conditions uniques:\n")
+print(unique(df$Conditions))
+```
+
+**Observation** : 13 types de conditions différentes sont identifiées, allant de "aucune" à des contraintes complexes combinant sport, SVT, langue et sexe.
+
+## 12. Nettoyage de la colonne 'Spécialités'
+
+```{r clean-specialites}
+# Fonction pour nettoyer une spécialité
+nettoyer_specialite <- function(valeur) {
+  # Gérer les valeurs vides ou NA
+  if (is.na(valeur) || str_trim(valeur) %in% c('', '\t/', '/')) {
+    return(list())
+  }
+  
+  # Remplacer tous les séparateurs par /
+  valeur_nettoyee <- str_replace_all(valeur, "\\\\\\\\|\\\\\\\\|//", "/")
+  
+  # Séparer par /
+  specialites <- str_split(valeur_nettoyee, "/")[[1]]
+  
+  # Nettoyer chaque spécialité
+  liste_nettoyee <- specialites %>%
+    str_trim() %>%
+    .[. != ""] %>%
+    str_to_title()
+  
+  return(liste_nettoyee)
+}
+
+# Application à la colonne Spécialités
+df <- df %>%
+  mutate(Spécialités = lapply(Spécialités, nettoyer_specialite))
+
+cat("Nettoyage des spécialités terminé!\n")
+cat("\nExemple des 5 premières spécialités:\n")
+print(head(df$Spécialités, 5))
+```
+
+**Observation** : La colonne Spécialités est la plus complexe, contenant des listes avec des séparateurs variés. L'algorithme de nettoyage permet d'extraire proprement chaque spécialité.
+
+## 13. Résumé et aperçu des données nettoyées
+
+```{r summary-cleaned}
+cat("\nrésumé final\n")
+cat("nombre total de lignes:", nrow(df), "\n")
+cat("nombre de colonnes:", ncol(df), "\n")
+cat("\naprçu des premières lignes:\n")
+print(head(df, 5))
+```
+
+**Conclusion du nettoyage** : Les données sont maintenant propres et standardisées, prêtes pour l'analyse exploratoire. Le nombre de lignes est passé de 240 à 238 après suppression des lignes avec Filiere vide. Les données nettoyées ont été sauvegardées dans le fichier `Data/data_cleaned.csv`.
+
+---
+
+# Phase II : Analyse Exploratoire des Données (EDA)
+
+## Introduction à l'Analyse Exploratoire
+
+Cette section répond point par point aux questions fondamentales de l'orientation 2025 pour les bacheliers lettres en Tunisie. À partir des données nettoyées et standardisées, nous explorons les opportunités qui s'offrent aux bacheliers face à la baisse du taux de réussite au baccalauréat section Lettres.
+
+## 1. Chargement des Bibliothèques et Données
+
+```{r eda-setup}
+# Chargement des données nettoyées
+df <- read.csv("Data/data_cleaned.csv", fileEncoding = "UTF-8")
+
+# Nettoyage des noms de colonnes (suppression des retours à la ligne)
+df <- df %>%
+  mutate(across(where(is.character), ~str_replace_all(., "\n", " "))) %>%
+  mutate(across(where(is.character), str_trim))
+
+# Renommer les colonnes pour faciliter l'analyse
+colnames(df) <- c("Filiere", "Universite", "Etablissement", "Gouvernorat", 
+                  "Criteres", "Duree", "Score_2025", "Score_2024", 
+                  "Conditions", "Specialites")
+
+# Aperçu des données
+cat("aperçu des données\n")
+cat("nombre de filières/programmes:", nrow(df), "\n")
+cat("nombre de variables:", ncol(df), "\n\n")
+
+cat("variables disponibles:\n")
+print(colnames(df))
+
+cat("\npremières observations:\n")
+head(df, 3)
+```
+
+**Observation** : Les données nettoyées contiennent 238 filières avec 10 variables descriptives.
+
+## 2. Vue d'Ensemble : Le Contexte du Bac Lettres 2025
+
+### Le Défi : Moins de Bacheliers, Même Nombre de Places
+
+Avec un taux de réussite passant de **44.33%** à **39.10%**, la compétition pour les filières universitaires devrait théoriquement diminuer. Analysons si les scores d'orientation reflètent cette tendance.
+
+```{r stats-descriptives}
+# Statistiques descriptives des scores d'orientation
+cat("statistiques descriptives des scores d'orientation\n\n")
+
+# Statistiques pour 2025
+cat("session 2025:\n")
+cat("   score minimum    :", round(min(df$Score_2025, na.rm = TRUE), 2), "\n")
+cat("   score maximum    :", round(max(df$Score_2025, na.rm = TRUE), 2), "\n")
+cat("   score moyen      :", round(mean(df$Score_2025, na.rm = TRUE), 2), "\n")
+cat("   score médian     :", round(median(df$Score_2025, na.rm = TRUE), 2), "\n")
+cat("   écart-type       :", round(sd(df$Score_2025, na.rm = TRUE), 2), "\n\n")
+
+# Statistiques pour 2024
+cat("session 2024:\n")
+cat("   score minimum    :", round(min(df$Score_2024, na.rm = TRUE), 2), "\n")
+cat("   score maximum    :", round(max(df$Score_2024, na.rm = TRUE), 2), "\n")
+cat("   score moyen      :", round(mean(df$Score_2024, na.rm = TRUE), 2), "\n")
+cat("   score médian     :", round(median(df$Score_2024, na.rm = TRUE), 2), "\n")
+cat("   écart-type       :", round(sd(df$Score_2024, na.rm = TRUE), 2), "\n\n")
+
+# Comparaison
+diff_moyenne <- mean(df$Score_2025, na.rm = TRUE) - mean(df$Score_2024, na.rm = TRUE)
+cat("évolution 2024 -> 2025:\n")
+cat("   différence moyenne:", round(diff_moyenne, 2), "points\n")
+cat("   tendance          :", ifelse(diff_moyenne < 0, "baisse", "hausse"), "\n")
+```
+
+**Observation** : La différence moyenne entre 2024 et 2025 est de -0.43 points, indiquant une légère baisse globale des scores, cohérente avec la baisse du taux de réussite au bac.
+
+```{r plot-distribution}
+# Visualisation : Comparaison des distributions 2024 vs 2025
+df_long <- df %>%
+  select(Filiere, Score_2025, Score_2024) %>%
+  pivot_longer(cols = c(Score_2025, Score_2024), 
+               names_to = "Annee", 
+               values_to = "Score") %>%
+  mutate(Annee = ifelse(Annee == "Score_2025", "2025", "2024"))
+
+ggplot(df_long, aes(x = Score, fill = Annee)) +
+  geom_density(alpha = 0.6, color = "white") +
+  scale_fill_manual(values = c("2024" = "#F18F01", "2025" = "#2E86AB")) +
+  labs(
+    title = "Distribution des Scores d'Orientation : 2024 vs 2025",
+    subtitle = "Comparaison de la densité des scores minimums d'accès aux filières",
+    x = "Score d'Orientation (points)",
+    y = "Densité",
+    fill = "Session",
+    caption = "Source: Données d'orientation universitaire Tunisie"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "top"
+  ) +
+  geom_vline(aes(xintercept = mean(df$Score_2025, na.rm = TRUE)), 
+             color = "#2E86AB", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = mean(df$Score_2024, na.rm = TRUE)), 
+             color = "#F18F01", linetype = "dashed", size = 1)
+```
+
+**Conclusion** : La distribution des scores montre une légère translation vers la gauche en 2025, confirmant que les filières sont devenues mécaniquement plus accessibles suite à la baisse du nombre de candidats.
+
+### Insight 1 : Évolution des Scores
+
+**Question** : Les scores d'orientation ont-ils baissé proportionnellement au taux de réussite du bac ?
+
+```{r evolution-scores}
+# Calcul de l'évolution des scores par filière
+df <- df %>%
+  mutate(
+    Evolution = Score_2025 - Score_2024,
+    Evolution_Pct = round((Evolution / Score_2024) * 100, 2),
+    Tendance = case_when(
+      Evolution < -5 ~ "Forte baisse",
+      Evolution < 0 ~ "Légère baisse",
+      Evolution == 0 ~ "Stable",
+      Evolution < 5 ~ "Légère hausse",
+      TRUE ~ "Forte hausse"
+    )
+  )
+
+# Résumé des tendances
+tendances_resume <- df %>%
+  count(Tendance) %>%
+  mutate(Pourcentage = round(n / sum(n) * 100, 1)) %>%
+  arrange(desc(n))
+
+cat("répartition des tendances 2024 -> 2025\n\n")
+for(i in 1:nrow(tendances_resume)) {
+  cat(sprintf("%-15s : %3d filières (%5.1f%%)\n", 
+              tendances_resume$Tendance[i], 
+              tendances_resume$n[i], 
+              tendances_resume$Pourcentage[i]))
+}
+
+# Filières avec la plus grande baisse
+cat("\n\ntop 10 filières avec la plus grande baisse de score:\n")
+df %>%
+  filter(Score_2024 > 0) %>%
+  arrange(Evolution) %>%
+  select(Filiere, Gouvernorat, Score_2024, Score_2025, Evolution) %>%
+  head(10) %>%
+  print()
+```
+
+**Observation** : 47.5% des filières ont vu leur score baisser, tandis que 51.3% ont vu leur score augmenter. Cette répartition suggère que la baisse du taux de réussite n'a pas uniformément affecté toutes les filières.
+
+```{r plot-tendances}
+# Visualisation des tendances
+ggplot(tendances_resume, aes(x = reorder(Tendance, -n), y = n, fill = Tendance)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = paste0(n, " (", Pourcentage, "%)")), 
+            vjust = -0.5, fontface = "bold") +
+  scale_fill_manual(values = c(
+    "Forte baisse" = "#C73E1D",
+    "Légère baisse" = "#F18F01", 
+    "Stable" = "#6B6B6B",
+    "Légère hausse" = "#44AF69",
+    "Forte hausse" = "#2E86AB"
+  )) +
+  labs(
+    title = "Tendance des Scores d'Orientation 2024 → 2025",
+    subtitle = "Nombre de filières par catégorie de changement",
+    x = "Tendance",
+    y = "Nombre de filières",
+    caption = "Forte baisse/hausse: ±5 points | Légère: <5 points"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.text.x = element_text(angle = 20, hjust = 1)
+  ) +
+  ylim(0, max(tendances_resume$n) * 1.15)
+```
+
+## 3. Répartition Géographique des Opportunités
+
+**Question** : Comment les filières sont-elles distribuées sur le territoire tunisien ? Les bacheliers de l'intérieur ont-ils les mêmes opportunités que ceux du Grand Tunis ?
+
+```{r geo-analysis}
+# Analyse par gouvernorat
+gouvernorat_stats <- df %>%
+  group_by(Gouvernorat) %>%
+  summarise(
+    Nb_Filieres = n(),
+    Score_Moyen_2025 = round(mean(Score_2025, na.rm = TRUE), 2),
+    Score_Min_2025 = round(min(Score_2025, na.rm = TRUE), 2),
+    Score_Max_2025 = round(max(Score_2025, na.rm = TRUE), 2),
+    Nb_Universites = n_distinct(Universite),
+    Nb_Etablissements = n_distinct(Etablissement)
+  ) %>%
+  arrange(desc(Nb_Filieres))
+
+cat("répartition par gouvernorat\n\n")
+
+# Calcul des pourcentages
+total_filieres <- sum(gouvernorat_stats$Nb_Filieres)
+gouvernorat_stats <- gouvernorat_stats %>%
+  mutate(Pourcentage = round(Nb_Filieres / total_filieres * 100, 1))
+
+print(gouvernorat_stats)
+
+cat("\n\nconcentration géographique:\n")
+tunis_pct <- sum(gouvernorat_stats$Pourcentage[gouvernorat_stats$Gouvernorat == "Tunis"])
+cat("grand tunis concentre:", tunis_pct, "% des filières\n")
+cat("nombre de gouvernorats avec des filières:", nrow(gouvernorat_stats), "\n")
+```
+
+**Observation** : Tunis concentre 37.4% des filières, suivie par Sfax (10.5%) et Sousse (7.6%). Cette concentration géographique crée une inégalité d'accès pour les étudiants des régions intérieures.
+
+```{r plot-geo}
+# Visualisation : Répartition par gouvernorat
+ggplot(gouvernorat_stats, aes(x = reorder(Gouvernorat, Nb_Filieres), y = Nb_Filieres, fill = Score_Moyen_2025)) +
+  geom_col() +
+  geom_text(aes(label = paste0(Nb_Filieres, " (", Pourcentage, "%)")), 
+            hjust = -0.1, size = 3.5) +
+  coord_flip() +
+  scale_fill_viridis(option = "plasma", direction = -1, name = "Score moyen\n2025") +
+  labs(
+    title = "Nombre de Filières par Gouvernorat",
+    subtitle = "Couleur = Score moyen d'orientation 2025",
+    x = "",
+    y = "Nombre de filières",
+    caption = "Plus le score est élevé, plus la couleur est sombre"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "right"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
+```
+
+**Conclusion** : La polarisation géographique est marquée. Les étudiants du Grand Tunis ont accès à près de 40% de l'offre, tandis que certains gouvernorats n'offrent qu'une ou deux filières.
+
+## 4. Analyse par Université
+
+**Question** : Quelles universités offrent le plus d'opportunités aux bacheliers lettres ?
+
+```{r uni-analysis}
+# Analyse par université
+universite_stats <- df %>%
+  group_by(Universite) %>%
+  summarise(
+    Nb_Filieres = n(),
+    Nb_Etablissements = n_distinct(Etablissement),
+    Score_Moyen_2025 = round(mean(Score_2025, na.rm = TRUE), 2),
+    Score_Min = round(min(Score_2025, na.rm = TRUE), 2),
+    Score_Max = round(max(Score_2025, na.rm = TRUE), 2),
+    Ecart_Score = Score_Max - Score_Min
+  ) %>%
+  arrange(desc(Nb_Filieres)) %>%
+  mutate(
+    Universite_Clean = str_to_title(str_replace_all(Universite, "\\s+", " ")),
+    Pourcentage = round(Nb_Filieres / sum(Nb_Filieres) * 100, 1)
+  )
+
+cat("répartition par université\n\n")
+
+for(i in 1:nrow(universite_stats)) {
+  cat(sprintf("%d. %-35s: %2d filières (%4.1f%%) | score: %5.1f - %5.1f\n",
+              i,
+              substr(universite_stats$Universite_Clean[i], 1, 35),
+              universite_stats$Nb_Filieres[i],
+              universite_stats$Pourcentage[i],
+              universite_stats$Score_Min[i],
+              universite_stats$Score_Max[i]))
+}
+```
+
+**Observation** : Les universités de Carthage, Gabès et Sfax offrent chacune environ 10-11% des filières, suivies de près par Tunis, Manouba et Tunis El Manar.
+
+```{r plot-uni}
+# Visualisation : Répartition par université (camembert)
+ggplot(universite_stats, aes(x = "", y = Nb_Filieres, fill = Universite_Clean)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  scale_fill_viridis(discrete = TRUE, option = "turbo") +
+  labs(
+    title = "Répartition des Filières par Université",
+    subtitle = paste0("Total: ", sum(universite_stats$Nb_Filieres), " filières"),
+    fill = "Université"
+  ) +
+  theme_void() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    legend.position = "right",
+    legend.text = element_text(size = 8)
+  ) +
+  geom_text(aes(label = paste0(Pourcentage, "%")), 
+            position = position_stack(vjust = 0.5), size = 3, color = "white")
+```
+
+## 5. Analyse des Types de Filières
+
+**Question** : Quels domaines d'études sont les plus représentés ? Quelles sont les filières les plus accessibles vs les plus sélectives ?
+
+```{r domain-analysis}
+# Catégorisation des filières par domaine
+df <- df %>%
+  mutate(Domaine = case_when(
+    str_detect(Filiere, "médecine|infirm|santé|physio|ortho|sage|puér|urgence|hygiene") ~ "Sante",
+    str_detect(Filiere, "droit|juridique|social|travail") ~ "Droit & Social",
+    str_detect(Filiere, "arabe|français|anglais|espagnol|italien|allemand|russe|chinois|langue") ~ "Langues",
+    str_detect(Filiere, "arts|design|musique|théâ|cinéma|beaux|plastique") ~ "Arts & Design",
+    str_detect(Filiere, "histoire|géo|archéo|patrimoine|anthropo|socio|philo|psycho") ~ "Sciences Humaines",
+    str_detect(Filiere, "éducation|enseignement|cadre") ~ "Education",
+    str_detect(Filiere, "journal|communication|document|média") ~ "Communication",
+    str_detect(Filiere, "tourism|hôtel") ~ "Tourisme",
+    str_detect(Filiere, "sport|physique") ~ "Sport",
+    str_detect(Filiere, "islam|théolog|zitouna") ~ "Sciences Islamiques",
+    str_detect(Filiere, "prépa|cycle") ~ "Classes Preparatoires",
+    str_detect(Filiere, "architect|urban") ~ "Architecture",
+    str_detect(Filiere, "traduction") ~ "Traduction",
+    TRUE ~ "Autres"
+  ))
+
+# Statistiques par domaine
+domaine_stats <- df %>%
+  group_by(Domaine) %>%
+  summarise(
+    Nb_Filieres = n(),
+    Score_Moyen = round(mean(Score_2025, na.rm = TRUE), 2),
+    Score_Min = round(min(Score_2025, na.rm = TRUE), 2),
+    Score_Max = round(max(Score_2025, na.rm = TRUE), 2),
+    Evolution_Moy = round(mean(Evolution, na.rm = TRUE), 2)
+  ) %>%
+  arrange(desc(Nb_Filieres)) %>%
+  mutate(Pourcentage = round(Nb_Filieres / sum(Nb_Filieres) * 100, 1))
+
+cat("répartition par domaine d'études\n\n")
+
+# Affichage formaté du tableau
+domaine_stats_display <- domaine_stats %>%
+  rename(
+    "Domaine" = "Domaine",
+    "Filières" = "Nb_Filieres",
+    "Score Moy" = "Score_Moyen",
+    "Score Min" = "Score_Min",
+    "Score Max" = "Score_Max",
+    "Évolution" = "Evolution_Moy",
+    "%" = "Pourcentage"
+  ) %>%
+  mutate(across(where(is.numeric), ~round(., 1)))
+
+knitr::kable(domaine_stats_display, 
+             format = "simple",
+             digits = 1,
+             caption = "Statistiques par Domaine d'Études")
+```
+
+**Observation** : Les Sciences Humaines dominent avec le plus grand nombre de filières, suivies par les Langues et la Santé. Les filières de Santé présentent les scores moyens les plus élevés (plus sélectives).
+
+```{r plot-domain}
+# Visualisation : Nombre de filières par domaine avec scores
+ggplot(domaine_stats, aes(x = reorder(Domaine, Nb_Filieres), y = Nb_Filieres, fill = Score_Moyen)) +
+  geom_col() +
+  geom_text(aes(label = paste0(Nb_Filieres, " (", Pourcentage, "%)")), 
+            hjust = -0.1, size = 3.5, fontface = "bold") +
+  coord_flip() +
+  scale_fill_gradient2(low = "#44AF69", mid = "#F18F01", high = "#C73E1D", 
+                       midpoint = 110, name = "Score moyen\n2025") +
+  labs(
+    title = "Répartition des Filières par Domaine d'Études",
+    subtitle = "Couleur = Score moyen d'orientation 2025 (vert = accessible, rouge = sélectif)",
+    x = "",
+    y = "Nombre de filières"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "right"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
+```
+
+```{r plot-domain-boxplot}
+# Boxplot : Distribution des scores par domaine
+ggplot(df, aes(x = reorder(Domaine, Score_2025, FUN = median), y = Score_2025, fill = Domaine)) +
+  geom_boxplot(alpha = 0.7, show.legend = FALSE) +
+  geom_jitter(width = 0.2, alpha = 0.3, size = 1.5, color = "gray30") +
+  coord_flip() +
+  scale_fill_viridis(discrete = TRUE, option = "turbo") +
+  labs(
+    title = "Distribution des Scores d'Orientation par Domaine (2025)",
+    subtitle = "Médiane, quartiles et dispersion des scores",
+    x = "",
+    y = "Score d'Orientation 2025"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14)
+  ) +
+  geom_hline(yintercept = median(df$Score_2025, na.rm = TRUE), 
+             linetype = "dashed", color = "red", size = 0.8) +
+  annotate("text", x = 0.5, y = median(df$Score_2025, na.rm = TRUE) + 5, 
+           label = paste0("Médiane globale: ", round(median(df$Score_2025, na.rm = TRUE), 1)),
+           color = "red", hjust = 0, size = 3.5)
+```
+
+**Conclusion** : Les filières de Santé et Sport restent les plus sélectives, avec des scores médians supérieurs à 140 points. Les Langues et Sciences Humaines offrent plus d'opportunités avec des scores plus accessibles.
+
+## 6. Analyse des Conditions d'Admission
+
+**Question** : Quelles contraintes spécifiques (sport, SVT, langues, âge, sexe) limitent l'accès aux filières ?
+
+```{r conditions-analysis}
+# Analyse des conditions d'admission
+conditions_stats <- df %>%
+  group_by(Conditions) %>%
+  summarise(
+    Nb_Filieres = n(),
+    Score_Moyen = round(mean(Score_2025, na.rm = TRUE), 2),
+    Domaines = paste(unique(Domaine), collapse = ", ")
+  ) %>%
+  arrange(desc(Nb_Filieres)) %>%
+  mutate(Pourcentage = round(Nb_Filieres / sum(Nb_Filieres) * 100, 1))
+
+cat("conditions d'admission\n\n")
+
+for(i in 1:nrow(conditions_stats)) {
+  cat(sprintf("%-45s : %2d filières (%5.1f%%) | score moy: %6.2f\n",
+              conditions_stats$Conditions[i],
+              conditions_stats$Nb_Filieres[i],
+              conditions_stats$Pourcentage[i],
+              conditions_stats$Score_Moyen[i]))
+}
+
+# Calcul des filières sans contraintes
+sans_contraintes <- sum(conditions_stats$Nb_Filieres[conditions_stats$Conditions == "aucune"])
+avec_contraintes <- sum(conditions_stats$Nb_Filieres) - sans_contraintes
+
+cat("\n\nrésumé:\n")
+cat("filières sans contraintes:", sans_contraintes, "(", round(sans_contraintes/sum(conditions_stats$Nb_Filieres)*100, 1), "%)\n")
+cat("filières avec contraintes:", avec_contraintes, "(", round(avec_contraintes/sum(conditions_stats$Nb_Filieres)*100, 1), "%)\n")
+```
+
+**Observation** : 68.5% des filières n'ont aucune contrainte particulière. Les contraintes les plus fréquentes sont l'âge limite (8.0%), SVT obligatoire (6.3%), et les langues étrangères (7.1%).
+
+```{r plot-conditions}
+# Visualisation des conditions
+conditions_stats_filtered <- conditions_stats %>%
+  mutate(Type_Condition = case_when(
+    Conditions == "aucune" ~ "Aucune",
+    str_detect(Conditions, "sport") ~ "Sport",
+    str_detect(Conditions, "svt") ~ "SVT",
+    str_detect(Conditions, "âge|age") ~ "Âge",
+    str_detect(Conditions, "langue") ~ "Langue étrangère",
+    str_detect(Conditions, "sexe") ~ "Sexe spécifique",
+    TRUE ~ "Autre"
+  ))
+
+type_condition_stats <- conditions_stats_filtered %>%
+  group_by(Type_Condition) %>%
+  summarise(
+    Nb_Total = sum(Nb_Filieres),
+    Score_Moyen = round(mean(Score_Moyen), 2)
+  ) %>%
+  mutate(Pourcentage = round(Nb_Total / sum(Nb_Total) * 100, 1))
+
+ggplot(type_condition_stats, aes(x = reorder(Type_Condition, -Nb_Total), y = Nb_Total, fill = Type_Condition)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = paste0(Nb_Total, "\n(", Pourcentage, "%)")), 
+            vjust = -0.3, fontface = "bold", size = 3.5) +
+  scale_fill_manual(values = c(
+    "Aucune" = "#44AF69",
+    "Âge" = "#F18F01",
+    "Sport" = "#2E86AB",
+    "SVT" = "#A23B72",
+    "Langue étrangère" = "#3B1F2B",
+    "Sexe spécifique" = "#C73E1D",
+    "Autre" = "#6B6B6B"
+  )) +
+  labs(
+    title = "Types de Conditions d'Admission",
+    subtitle = "Répartition des filières par type de contrainte",
+    x = "Type de condition",
+    y = "Nombre de filières"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.text.x = element_text(angle = 20, hjust = 1)
+  ) +
+  ylim(0, max(type_condition_stats$Nb_Total) * 1.2)
+```
+
+**Conclusion** : Près d'un tiers des filières (31.5%) imposent des contraintes qui peuvent limiter l'accès, notamment dans les domaines de la Santé et du Sport.
+
+## 7. Analyse de la Durée des Études
+
+**Question** : Quelle est la répartition des durées d'études et quel est l'investissement en temps requis par domaine ?
+
+```{r duree-analysis}
+# Analyse de la durée des études
+duree_stats <- df %>%
+  group_by(Duree) %>%
+  summarise(
+    Nb_Filieres = n(),
+    Score_Moyen = round(mean(Score_2025, na.rm = TRUE), 2),
+    Domaines = paste(unique(Domaine), collapse = ", ")
+  ) %>%
+  arrange(Duree) %>%
+  mutate(Pourcentage = round(Nb_Filieres / sum(Nb_Filieres) * 100, 1))
+
+cat("durée des études\n\n")
+
+for(i in 1:nrow(duree_stats)) {
+  cat(sprintf("%-10s : %3d filières (%5.1f%%) | score moy: %6.2f\n",
+              duree_stats$Duree[i],
+              duree_stats$Nb_Filieres[i],
+              duree_stats$Pourcentage[i],
+              duree_stats$Score_Moyen[i]))
+}
+
+# Visualisation
+ggplot(duree_stats, aes(x = Duree, y = Nb_Filieres, fill = Score_Moyen)) +
+  geom_col() +
+  geom_text(aes(label = paste0(Nb_Filieres, "\n(", Pourcentage, "%)")), 
+            vjust = -0.2, fontface = "bold") +
+  scale_fill_gradient(low = "#44AF69", high = "#C73E1D", name = "Score\nmoyen") +
+  labs(
+    title = "Répartition par Durée des Études",
+    subtitle = "Nombre de filières et sélectivité par durée de formation",
+    x = "Durée des études",
+    y = "Nombre de filières"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14)
+  ) +
+  ylim(0, max(duree_stats$Nb_Filieres) * 1.15)
+```
+
+**Observation** : 93.3% des filières durent 3 ans. Les filières de 6 et 9 ans (Médecine, Pharmacie, Médecine Dentaire) sont les plus sélectives avec des scores moyens supérieurs à 150 points.
+
+## 8. Top Filières : Les Plus et Moins Sélectives
+
+**Question** : Quelles sont les filières les plus accessibles et les plus sélectives pour un bachelier lettres en 2025 ?
+
+```{r top-filieres}
+# Top 15 filières les plus sélectives (score le plus élevé)
+cat("top 15 filières les plus sélectives (score 2025)\n\n")
+
+top_selectives <- df %>%
+  arrange(desc(Score_2025)) %>%
+  select(Filiere, Gouvernorat, Score_2025, Score_2024, Domaine) %>%
+  head(15)
+
+for(i in 1:nrow(top_selectives)) {
+  cat(sprintf("%2d. %-45s | %s | score: %6.2f\n",
+              i,
+              substr(str_to_title(top_selectives$Filiere[i]), 1, 45),
+              top_selectives$Gouvernorat[i],
+              top_selectives$Score_2025[i]))
+}
+
+cat("\n\ntop 15 filières les plus accessibles (score 2025)\n\n")
+
+top_accessibles <- df %>%
+  arrange(Score_2025) %>%
+  filter(Score_2025 > 0) %>%
+  select(Filiere, Gouvernorat, Score_2025, Score_2024, Domaine) %>%
+  head(15)
+
+for(i in 1:nrow(top_accessibles)) {
+  cat(sprintf("%2d. %-45s | %s | score: %6.2f\n",
+              i,
+              substr(str_to_title(top_accessibles$Filiere[i]), 1, 45),
+              top_accessibles$Gouvernorat[i],
+              top_accessibles$Score_2025[i]))
+}
+```
+
+**Observation** : Les filières les plus sélectives sont principalement en Santé (Médecine, Sciences Infirmières) avec des scores supérieurs à 160 points. Les plus accessibles sont majoritairement en Langues (Français, Anglais) avec des scores autour de 70 points.
+
+```{r plot-top-comparison}
+# Visualisation comparative Top 10 sélectives vs accessibles
+top10_comparison <- rbind(
+  top_selectives %>% head(10) %>% mutate(Categorie = "Plus Sélectives"),
+  top_accessibles %>% head(10) %>% mutate(Categorie = "Plus Accessibles")
+)
+
+ggplot(top10_comparison, aes(x = reorder(paste0(substr(str_to_title(Filiere), 1, 30), "..."), Score_2025), 
+                             y = Score_2025, fill = Categorie)) +
+  geom_col() +
+  geom_text(aes(label = round(Score_2025, 1)), hjust = -0.1, size = 3) +
+  coord_flip() +
+  facet_wrap(~Categorie, scales = "free_y") +
+  scale_fill_manual(values = c("Plus Sélectives" = "#C73E1D", "Plus Accessibles" = "#44AF69")) +
+  labs(
+    title = "Comparaison : Filières les Plus et Moins Sélectives (2025)",
+    subtitle = "Top 10 de chaque catégorie",
+    x = "",
+    y = "Score d'Orientation 2025"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "none",
+    strip.text = element_text(face = "bold", size = 12)
+  )
+```
+
+## 9. Analyse des Critères d'Orientation
+
+**Question** : Quels sont les critères de calcul des scores et comment impactent-ils l'orientation ?
+
+```{r criteres-analysis}
+# Analyse des critères d'orientation
+criteres_stats <- df %>%
+  group_by(Criteres) %>%
+  summarise(
+    Nb_Filieres = n(),
+    Score_Moyen = round(mean(Score_2025, na.rm = TRUE), 2)
+  ) %>%
+  arrange(desc(Nb_Filieres)) %>%
+  mutate(Pourcentage = round(Nb_Filieres / sum(Nb_Filieres) * 100, 1))
+
+cat("critères d'orientation\n\n")
+cat("FG = formation générale (score bac)\n")
+cat("AR = arabe | F = français | ANG = anglais | HG = histoire-géo\n")
+cat("PH = philosophie | SVT = sciences de la vie | SPT = sport\n\n")
+
+print(criteres_stats)
+
+# Top 10 critères les plus fréquents
+ggplot(criteres_stats %>% head(12), aes(x = reorder(Criteres, Nb_Filieres), y = Nb_Filieres, fill = Score_Moyen)) +
+  geom_col() +
+  geom_text(aes(label = paste0(Nb_Filieres, " (", Pourcentage, "%)")), 
+            hjust = -0.1, size = 3) +
+  coord_flip() +
+  scale_fill_viridis(option = "plasma", name = "Score moyen") +
+  labs(
+    title = "Critères d'Orientation les Plus Fréquents",
+    subtitle = "Top 12 des formules de calcul du score",
+    x = "Critère (formule)",
+    y = "Nombre de filières"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14)
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
+```
+
+**Observation** : Le critère le plus fréquent est "FG+PH" (27.3% des filières), suivi de "FG+SVT" (13.9%). Les critères incluant SVT sont associés aux scores moyens les plus élevés (filières de Santé).
+
+## 10. Corrélation entre Scores 2024 et 2025
+
+**Question** : Y a-t-il une corrélation forte entre les scores des deux années ? Les filières conservent-elles leur niveau de sélectivité ?
+
+```{r correlation}
+# Corrélation entre les scores 2024 et 2025
+df_corr <- df %>% filter(Score_2024 > 0)  # Exclure les nouvelles filières
+
+correlation <- cor(df_corr$Score_2024, df_corr$Score_2025, use = "complete.obs")
+
+cat("analyse de corrélation 2024 - 2025\n\n")
+cat("coefficient de corrélation (pearson):", round(correlation, 4), "\n")
+cat("interprétation:", ifelse(correlation > 0.8, "corrélation forte", 
+                               ifelse(correlation > 0.5, "corrélation modérée", "corrélation faible")), "\n\n")
+
+# Scatter plot avec régression
+ggplot(df_corr, aes(x = Score_2024, y = Score_2025, color = Domaine)) +
+  geom_point(alpha = 0.7, size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkred", linetype = "dashed") +
+  geom_abline(intercept = 0, slope = 1, linetype = "solid", color = "gray50", size = 0.8) +
+  scale_color_viridis(discrete = TRUE, option = "turbo") +
+  labs(
+    title = "Corrélation des Scores d'Orientation 2024 vs 2025",
+    subtitle = paste0("Coefficient de corrélation: r = ", round(correlation, 3), 
+                      " | Ligne grise = égalité parfaite"),
+    x = "Score 2024",
+    y = "Score 2025",
+    caption = "Points au-dessus de la ligne grise = score en hausse en 2025"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "right",
+    legend.text = element_text(size = 8)
+  ) +
+  annotate("text", x = 170, y = 80, label = paste0("r = ", round(correlation, 3)), 
+           size = 5, fontface = "bold", color = "darkred")
+```
+
+**Observation** : La corrélation de 0.90 indique une corrélation FORTE entre les scores 2024 et 2025. Les filières conservent globalement leur niveau de sélectivité relatif, même si certaines ont connu des variations significatives.
+
+## 11. Focus : Filières avec Évolution Remarquable
+
+**Question** : Quelles filières ont connu les changements les plus significatifs entre 2024 et 2025 ?
+
+```{r evolution-remarquable}
+# Filières avec les plus grands changements
+df_evolution <- df %>%
+  filter(Score_2024 > 0) %>%
+  mutate(
+    Evolution_Abs = abs(Evolution),
+    Direction = ifelse(Evolution > 0, "Hausse", "Baisse")
+  ) %>%
+  arrange(desc(Evolution_Abs))
+
+cat("top 10 plus grandes baisses\n")
+df_evolution %>%
+  filter(Evolution < 0) %>%
+  head(10) %>%
+  select(Filiere, Gouvernorat, Score_2024, Score_2025, Evolution) %>%
+  print()
+
+cat("\n\ntop 10 plus grandes hausses\n")
+df_evolution %>%
+  filter(Evolution > 0) %>%
+  arrange(desc(Evolution)) %>%
+  head(10) %>%
+  select(Filiere, Gouvernorat, Score_2024, Score_2025, Evolution) %>%
+  print()
+```
+
+**Observation** : Les plus grandes baisses concernent principalement des filières de Santé (Sciences Infirmières, Puériculture, Sage-femme) avec des baisses de 20 à 36 points. Les plus grandes hausses concernent des filières en Arts et Design, avec des augmentations allant jusqu'à 30 points.
+
+```{r plot-evolution}
+# Visualisation des évolutions les plus marquantes
+top_evolutions <- rbind(
+  df_evolution %>% filter(Evolution < 0) %>% head(8),
+  df_evolution %>% filter(Evolution > 0) %>% arrange(desc(Evolution)) %>% head(8)
+)
+
+ggplot(top_evolutions, aes(x = reorder(paste0(substr(str_to_title(Filiere), 1, 25), "..."), Evolution), 
+                           y = Evolution, fill = Direction)) +
+  geom_col() +
+  geom_text(aes(label = paste0(ifelse(Evolution > 0, "+", ""), round(Evolution, 1))), 
+            hjust = ifelse(top_evolutions$Evolution > 0, -0.1, 1.1), size = 3) +
+  coord_flip() +
+  scale_fill_manual(values = c("Hausse" = "#44AF69", "Baisse" = "#C73E1D")) +
+  labs(
+    title = "Filières avec les Évolutions les Plus Marquantes",
+    subtitle = "Différence de score entre 2024 et 2025",
+    x = "",
+    y = "Évolution du score (points)",
+    fill = "Direction"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "top"
+  ) +
+  geom_hline(yintercept = 0, color = "gray40", size = 0.8)
+```
+
+## 12. Tableau de Synthèse par Domaine
+
+```{r synthese-domaine}
+# Tableau récapitulatif par domaine
+synthese_domaine <- df %>%
+  group_by(Domaine) %>%
+  summarise(
+    `Nb Filières` = n(),
+    `Score Min 2025` = round(min(Score_2025, na.rm = TRUE), 1),
+    `Score Max 2025` = round(max(Score_2025, na.rm = TRUE), 1),
+    `Score Moyen 2025` = round(mean(Score_2025, na.rm = TRUE), 1),
+    `Évolution Moy.` = round(mean(Evolution, na.rm = TRUE), 1),
+    `% Sans Contraintes` = round(sum(Conditions == "aucune") / n() * 100, 0)
+  ) %>%
+  arrange(desc(`Nb Filières`))
+
+cat("tableau de synthèse par domaine\n\n")
+
+# Affichage du tableau formaté avec knitr::kable
+synthese_display <- synthese_domaine %>%
+  rename(
+    "Domaine" = "Domaine",
+    "Nb Filières" = "Nb Filières",
+    "Score Min" = "Score Min 2025",
+    "Score Max" = "Score Max 2025",
+    "Score Moyen" = "Score Moyen 2025",
+    "Évolution" = "Évolution Moy.",
+    "% Sans Contraintes" = "% Sans Contraintes"
+  ) %>%
+  mutate(across(where(is.numeric), ~round(., 1)))
+
+knitr::kable(synthese_display,
+             format = "simple",
+             digits = 1,
+             caption = "Tableau de Synthèse par Domaine d'Études")
+
+cat("\n\nlégende:\n")
+cat("   - score min/max/moyen 2025: scores d'orientation (plus bas = plus accessible)\n")
+cat("   - evolution: différence moyenne entre 2024 et 2025 (négatif = baisse)\n")
+cat("   - % sans contraintes: pourcentage de filières sans conditions spéciales\n")
+```
+
+---
+
+# Conclusions et Recommandations
+
+## Synthèse des Résultats
+
+```{r conclusions-auto}
+# Génération automatique des conclusions
+cat("conclusions de l'analyse exploratoire\n\n")
+
+# Contexte
+cat("contexte du bac lettres 2025\n")
+cat("   - taux de réussite 2024: 44.33%\n")
+cat("   - taux de réussite 2025: 39.10% (-5.23 points)\n")
+cat("   - impact: moins de bacheliers, potentiellement moins de compétition\n\n")
+
+# Offre de formation
+cat("offre de formation\n")
+cat("   - nombre total de filières:", nrow(df), "\n")
+cat("   - nombre d'universités:", n_distinct(df$Universite), "\n")
+cat("   - nombre d'établissements:", n_distinct(df$Etablissement), "\n")
+cat("   - gouvernorats couverts:", n_distinct(df$Gouvernorat), "\n\n")
+
+# Évolution des scores
+nb_baisse <- sum(df$Evolution < 0, na.rm = TRUE)
+nb_hausse <- sum(df$Evolution > 0, na.rm = TRUE)
+cat("évolution des scores 2024 -> 2025\n")
+cat("   - filières en baisse:", nb_baisse, "(", round(nb_baisse/nrow(df)*100, 1), "%)\n")
+cat("   - filières en hausse:", nb_hausse, "(", round(nb_hausse/nrow(df)*100, 1), "%)\n")
+cat("   - évolution moyenne:", round(mean(df$Evolution, na.rm = TRUE), 2), "points\n\n")
+
+# Accessibilité
+score_median <- median(df$Score_2025, na.rm = TRUE)
+nb_accessibles <- sum(df$Score_2025 <= 100, na.rm = TRUE)
+cat("accessibilité\n")
+cat("   - score médian 2025:", round(score_median, 2), "\n")
+cat("   - filières avec score ≤ 100:", nb_accessibles, "(", round(nb_accessibles/nrow(df)*100, 1), "%)\n")
+cat("   - filières sans contraintes:", sum(df$Conditions == "aucune"), "(", round(sum(df$Conditions == "aucune")/nrow(df)*100, 1), "%)\n")
+```
+
+## Recommandations pour les Bacheliers Lettres 2026
+
+**Contexte** : Avec un taux de réussite de 39.10% en 2025 (baisse de 5.23 points par rapport à 2024), les bacheliers Lettres 2026 doivent adopter une stratégie d'orientation réfléchie.
+
+### Opportunités à saisir :
+
+| Domaine | Avantages | Score Moyen |
+|---------|-----------|-------------|
+| **Langues** (français, arabe, anglais) | Scores accessibles, peu de contraintes | ~90 points |
+| **Sciences Humaines** (histoire, géographie, philosophie) | Bonne diversité, débouchés variés | ~97 points |
+| **Arts & Design** | Profils créatifs, options diversifiées | ~104 points |
+| **Communication & Journalisme** | Secteur en expansion | ~100 points |
+
+### Filières sélectives - Préparation intensive requise :
+
+| Filière | Score Requis | Contraintes |
+|---------|-------------|-------------|
+| **Médecine/Santé** | >160 points | SVT obligatoire |
+| **Sciences Infirmières** | >140 points | Sport + contraintes de sexe |
+| **Prépa Anglais** | >130 points | Très demandée |
+| **Architecture** | >140 points | Places limitées |
+
+### Stratégie géographique :
+
+- **Grand Tunis** (37% des filières) : Plus grand choix mais concurrence élevée
+- **Sfax, Sousse, Monastir** : Alternatives intéressantes avec scores potentiellement plus accessibles
+- **Régions intérieures** : Moins de choix mais opportunités moins connues
+
+### Tendances clés à surveiller :
+
+- **51%** des filières ont vu leur score **augmenter** malgré la baisse du taux de réussite
+- Les filières "valeurs sûres" (langues, santé) concentrent les meilleurs candidats
+- **68.5%** des filières sont sans contraintes particulières
+
+### Plan d'action recommandé :
+
+1. **Identifier 3-5 filières cibles** dans différentes gammes de scores
+2. **Vérifier les contraintes** (sport, SVT, âge) pour chaque choix
+3. **Diversifier géographiquement** pour maximiser les chances
+4. **Suivre les tendances** des scores entre 2024 et 2025 comme indicateur
+
+---
+
+## Données et Méthodologie
+
+- **Période** : Sessions 2024 et 2025
+- **Source** : Données officielles d'orientation universitaire - Ministère de l'Enseignement Supérieur, Tunisie
+- **Traitement** : Nettoyage et standardisation via R (voir Phase I)
+- **Échantillon** : 238 filières, 12 universités, 19 gouvernorats
+- **Outils** : R, tidyverse, ggplot2, viridis, knitr
+
+---
+
+**Analyste** : Maroua Hattab  
+**Date** : Janvier 2025  
+**Source** : Données officielles d'orientation universitaire Tunisie
