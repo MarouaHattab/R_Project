@@ -412,28 +412,10 @@ Le projet est déployé sur **Vercel** et accessible à l'adresse :
 
 ---
 
-## 👤 Auteur
-
-**Maroua Hattab**  
-Janvier 2025
-
-### Contact
-
-Pour toute question concernant cette analyse ou pour accéder aux données, veuillez contacter l'auteur.
-
----
 
 ## 📄 Licence
 
 Ce projet est destiné à des fins **éducatives et de recherche**. Les données sont issues de sources officielles publiques et sont utilisées dans le cadre d'une analyse statistique.
-
----
-
-## 🙏 Remerciements
-
-- Ministère de l'Enseignement Supérieur de Tunisie pour les données officielles
-- Communauté R et Quarto pour les outils de qualité
-- Tous les contributeurs aux packages utilisés
 
 ---
 
