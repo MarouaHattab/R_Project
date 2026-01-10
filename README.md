@@ -1,6 +1,6 @@
-# 📊 Analyse Stratégique : Bac Lettres Tunisie 2025
+# Strategic Analysis: Baccalaureate Lettres Tunisia 2025
 
-> **Analyse complète de l'offre universitaire pour les bacheliers Lettres 2025 en Tunisie**
+> **Comprehensive analysis of university offerings for Lettres baccalaureate graduates 2025 in Tunisia**
 
 [![Quarto](https://img.shields.io/badge/Quarto-1.4+-blue)](https://quarto.org)
 [![R](https://img.shields.io/badge/R-4.0+-green)](https://www.r-project.org)
@@ -8,424 +8,423 @@
 
 ---
 
-## 🌐 Accès au Rapport Interactif
+## Access to Interactive Report
 
-**👉 [Consulter le rapport complet en ligne](https://r-project-phi.vercel.app/)**
+**[View the complete report online](https://r-project-phi.vercel.app/)**
 
-Le rapport HTML interactif est déployé et accessible directement dans votre navigateur avec :
+The interactive HTML report is deployed and accessible directly in your browser with:
 
-- Navigation fluide entre les sections
-- Code repliable pour une lecture optimale
-- Visualisations interactives
-- Tableaux de données détaillés
-
----
-
-## 📋 Description du Projet
-
-Ce projet présente une **analyse statistique complète** des données d'orientation universitaire pour les bacheliers Lettres en Tunisie. Face à une **baisse alarmante du taux de réussite au baccalauréat** (de 44.33% en 2024 à 39.10% en 2025, soit -5.23 points), cette analyse vise à :
-
-### 🎯 Objectifs Principaux
-
-- **Décrire l'offre complète** : 238 filières universitaires avec leurs scores d'entrée (2024/2025), contraintes d'admission et spécialisations
-- **Évaluer l'accessibilité** : Identifier les filières les plus accessibles vs les plus sélectives selon les scores d'orientation
-- **Analyser la répartition géographique** : Examiner la distribution des opportunités sur le territoire tunisien (19 gouvernorats)
-- **Explorer les tendances** : Comparer l'évolution des scores entre 2024 et 2025 pour comprendre l'impact de la baisse du taux de réussite
-- **Fournir des recommandations** : Guider les bacheliers Lettres 2026 dans leur stratégie d'orientation
-
-### 🔍 Questions Clés Répondues
-
-1. **Accessibilité** : Quelles filières ont des scores d'entrée plus accessibles en 2025 vs 2024 ?
-2. **Répartition géographique** : Comment les offres sont-elles distribuées sur le territoire tunisien ?
-3. **Diversité des formations** : Quels domaines et spécialisations sont disponibles ?
-4. **Conditions d'admission** : Quelles contraintes spécifiques (sport, langue, âge) peuvent limiter l'accès ?
-5. **Tendances** : Les scores d'orientation baissent-ils parallèlement au taux de réussite ?
+- Smooth navigation between sections
+- Collapsible code for optimal reading
+- Interactive visualizations
+- Detailed data tables
 
 ---
 
-## 📁 Structure du Projet
+## Project Description
+
+This project presents a **comprehensive statistical analysis** of university orientation data for Lettres baccalaureate graduates in Tunisia. Faced with an **alarming drop in the baccalaureate success rate** (from 44.33% in 2024 to 39.10% in 2025, a -5.23 point decrease), this analysis aims to:
+
+### Main Objectives
+
+- **Describe the complete offering**: 238 university programs with their entry scores (2024/2025), admission constraints, and specializations
+- **Evaluate accessibility**: Identify the most accessible vs most selective programs based on orientation scores
+- **Analyze geographic distribution**: Examine the distribution of opportunities across Tunisian territory (19 governorates)
+- **Explore trends**: Compare score evolution between 2024 and 2025 to understand the impact of the success rate decline
+- **Provide recommendations**: Guide Lettres baccalaureate graduates 2026 in their orientation strategy
+
+### Key Questions Answered
+
+1. **Accessibility**: Which programs have more accessible entry scores in 2025 vs 2024?
+2. **Geographic distribution**: How are offerings distributed across Tunisian territory?
+3. **Training diversity**: What fields and specializations are available?
+4. **Admission conditions**: What specific constraints (sports, language, age) can limit access?
+5. **Trends**: Are orientation scores declining in parallel with the success rate?
+
+---
+
+## Project Structure
 
 ```
 ./
-├── index.qmd                 # Document Quarto principal (nettoyage + EDA)
-├── index.html               # Rapport HTML généré (à ouvrir dans le navigateur)
+├── index.qmd                 # Main Quarto document (cleaning + EDA)
+├── index.html               # Generated HTML report (open in browser)
 ├── Data/
-│   ├── data.xlsx             # Données brutes officielles (240 lignes × 10 colonnes)
-│   ├── data_cleaned.csv      # Données nettoyées (238 lignes, UTF-8)
-│   └── data_cleaned.rds      # Données nettoyées (format R natif)
+│   ├── data.xlsx             # Raw official data (240 rows × 10 columns)
+│   ├── data_cleaned.csv      # Cleaned data (238 rows, UTF-8)
+│   └── data_cleaned.rds      # Cleaned data (native R format)
 ├── Notebooks/
-│   ├── cleaning.ipynb        # Notebook original de nettoyage
-│   └── EDA.ipynb             # Notebook original d'analyse exploratoire
-├── build.sh                  # Script de build automatisé (optionnel)
-├── vercel.json               # Configuration de déploiement Vercel
-└── README.md                 # Ce fichier
+│   ├── cleaning.ipynb        # Original cleaning notebook
+│   └── EDA.ipynb             # Original exploratory analysis notebook
+├── build.sh                  # Automated build script (optional)
+├── vercel.json               # Vercel deployment configuration
+└── README.md                 # This file
 ```
 
 ---
 
-## 📊 Données Utilisées
+## Data Used
 
-### Source et Période
+### Source and Period
 
-- **Source** : Données officielles d'orientation universitaire - Ministère de l'Enseignement Supérieur, Tunisie
-- **Période** : Sessions 2024 et 2025
-- **Portail** : [Guide d'Orientation RNU](https://guide-orientation.rnu.tn/index.php)
+- **Source**: Official university orientation data - Ministry of Higher Education, Tunisia
+- **Period**: 2024 and 2025 sessions
+- **Portal**: [RNU Orientation Guide](https://guide-orientation.rnu.tn/index.php)
 
-### Variables Analysées
+### Variables Analyzed
 
-| Variable          | Description                                                        |
-| ----------------- | ------------------------------------------------------------------ |
-| **Filiere**       | Nom de la filière universitaire                                    |
-| **Universite**    | Université proposant la filière (12 universités)                   |
-| **Etablissement** | Établissement spécifique (83 établissements)                       |
-| **Gouvernorat**   | Localisation géographique (19 gouvernorats)                        |
-| **Criteres**      | Formule de calcul du score d'orientation (26 formules différentes) |
-| **Duree**         | Durée des études (02, 03, 06, 09 ans)                              |
-| **Score_2025**    | Score minimum d'entrée en 2025 (0 à 173.22 points)                 |
-| **Score_2024**    | Score minimum d'entrée en 2024 (0 à 182.91 points)                 |
-| **Conditions**    | Contraintes d'admission (13 types différents)                      |
-| **Specialites**   | Spécialisations proposées (listes complexes)                       |
+| Variable          | Description                                                     |
+| ----------------- | --------------------------------------------------------------- |
+| **Filiere**       | University program name                                         |
+| **Universite**    | University offering the program (12 universities)               |
+| **Etablissement** | Specific institution (83 institutions)                          |
+| **Gouvernorat**   | Geographic location (19 governorates)                           |
+| **Criteres**      | Orientation score calculation formula (26 different formulas)   |
+| **Duree**         | Study duration (02, 03, 06, 09 years)                           |
+| **Score_2025**    | Minimum entry score in 2025 (0 to 173.22 points)                |
+| **Score_2024**    | Minimum entry score in 2024 (0 to 182.91 points)                |
+| **Conditions**    | Admission constraints (13 different types)                      |
+| **Specialites**   | Proposed specializations (complex lists)                        |
 
-### Statistiques Clés
+### Key Statistics
 
-- **238 filières** analysées (après nettoyage)
-- **12 universités** représentées
-- **83 établissements** différents
-- **19 gouvernorats** couverts
-- **26 formules** de critères d'orientation
-- **13 types** de conditions d'admission
-
----
-
-## 🔧 Phase I : Nettoyage et Préparation des Données
-
-### Défis Majeurs Identifiés
-
-Les données brutes présentaient plusieurs défis techniques :
-
-- **Méta-données corrompues** : Noms de colonnes avec sauts de ligne (`\n`) et tabulations (`\t`)
-- **Incohérence textuelle** : Variantes multiples créant des doublons (ex: "l en sc. infirmieres" vs "Licence en Sciences Infirmières")
-- **Valeurs vides ambiguës** : Utilisation de termes comme "Rien" ou "03 ans" dans des colonnes de conditions
-
-### Pipeline de Nettoyage
-
-#### 1. Standardisation des Colonnes
-
-- Suppression des sauts de ligne et tabulations
-- Normalisation des espaces multiples
-- Suppression des caractères spéciaux
-
-#### 2. Harmonisation des Filières
-
-- Conversion en minuscules
-- Standardisation du préfixe "L EN"
-- Mapping de 22 variantes vers des noms cohérents
-- Résultat : **71 filières uniques** après nettoyage initial
-
-#### 3. Nettoyage des Entités
-
-- **Universités** : 12 universités standardisées
-- **Établissements** : 83 établissements nettoyés
-- **Gouvernorats** : 19 gouvernorats avec casse standardisée
-
-#### 4. Normalisation des Critères et Conditions
-
-- **Critères** : 26 formules standardisées en majuscules
-- **Conditions** : 13 types mappés depuis 15 variantes originales
-- **Durées** : Format uniforme (02 ans, 03 ans, 06 ans, 09 ans)
-
-#### 5. Traitement Avancé des Spécialités
-
-- Algorithme dédié pour gérer les séparateurs multiples (`/`, `//`, `\`)
-- Extraction et nettoyage de chaque spécialité
-- Conversion en format liste structurée
-
-#### 6. Gestion des Scores
-
-- Remplacement des valeurs manquantes par 0 (nouvelles filières)
-- Vérification des plages min/max
-- Scores 2025 : 0 à 173.22 points
-- Scores 2024 : 0 à 182.91 points
-
-### Résultats du Nettoyage
-
-- **240 → 238 lignes** (suppression des lignes avec Filiere vide)
-- **10 colonnes** standardisées et exploitables
-- **Données sauvegardées** : `Data/data_cleaned.csv` (UTF-8) et `Data/data_cleaned.rds`
+- **238 programs** analyzed (after cleaning)
+- **12 universities** represented
+- **83 different institutions**
+- **19 governorates** covered
+- **26 orientation** criteria formulas
+- **13 types** of admission conditions
 
 ---
 
-## 📈 Phase II : Analyse Exploratoire des Données (EDA)
+## Phase I: Data Cleaning and Preparation
 
-### Vue d'Ensemble : Contexte du Bac Lettres 2025
+### Major Challenges Identified
 
-**Le Défi** : Moins de bacheliers, même nombre de places
+Raw data presented several technical challenges:
 
-Avec un taux de réussite passant de **44.33%** à **39.10%**, la compétition pour les filières universitaires devrait théoriquement diminuer. L'analyse révèle :
+- **Corrupted metadata**: Column names with line breaks (`\n`) and tabs (`\t`)
+- **Textual inconsistency**: Multiple variants creating duplicates (e.g., "l en sc. infirmieres" vs "Licence en Sciences Infirmières")
+- **Ambiguous empty values**: Use of terms like "Rien" or "03 ans" in condition columns
 
-- **Évolution moyenne** : -0.43 points entre 2024 et 2025
-- **47.5%** des filières ont vu leur score baisser
-- **51.3%** des filières ont vu leur score augmenter
-- **Score médian 2025** : 104.19 points
+### Cleaning Pipeline
 
-### Analyses Réalisées
+#### 1. Column Standardization
 
-#### 1. Accessibilité des Scores
+- Removal of line breaks and tabs
+- Normalization of multiple spaces
+- Removal of special characters
 
-- Statistiques descriptives comparatives (2024 vs 2025)
-- Distribution des scores avec visualisations de densité
-- Identification des tendances (forte baisse, légère baisse, stable, légère hausse, forte hausse)
+#### 2. Program Harmonization
 
-#### 2. Répartition Géographique
+- Conversion to lowercase
+- Standardization of "L EN" prefix
+- Mapping of 22 variants to coherent names
+- Result: **71 unique programs** after initial cleaning
 
-- **Concentration** : Grand Tunis concentre 37.4% des filières
-- **Top 3 gouvernorats** : Tunis (89 filières), Sfax (25), Sousse (18)
-- **Inégalités** : Certains gouvernorats n'offrent qu'une ou deux filières
+#### 3. Entity Cleaning
 
-#### 3. Analyse par Université
+- **Universities**: 12 standardized universities
+- **Institutions**: 83 cleaned institutions
+- **Governorates**: 19 governorates with standardized case
 
-- Répartition équilibrée entre les 12 universités
-- Top 3 : Carthage, Gabès, Sfax (chacune ~10-11% des filières)
-- Amplitude des scores par université
+#### 4. Criteria and Conditions Normalization
 
-#### 4. Domaines d'Études
+- **Criteria**: 26 formulas standardized in uppercase
+- **Conditions**: 13 types mapped from 15 original variants
+- **Durations**: Uniform format (02 years, 03 years, 06 years, 09 years)
 
-- **Catégorisation** : 14 domaines identifiés (Santé, Langues, Sciences Humaines, Arts & Design, etc.)
-- **Sélectivité** : Santé et Sport restent les plus sélectives (scores médians >140 points)
-- **Accessibilité** : Langues et Sciences Humaines offrent plus d'opportunités
+#### 5. Advanced Processing of Specializations
 
-#### 5. Conditions d'Admission
+- Dedicated algorithm to handle multiple separators (`/`, `//`, `\`)
+- Extraction and cleaning of each specialization
+- Conversion to structured list format
 
-- **68.5%** des filières sans contraintes particulières
-- **31.5%** avec contraintes (sport, SVT, langue, âge, sexe)
-- Contraintes les plus fréquentes : âge limite (8.0%), SVT obligatoire (6.3%)
+#### 6. Score Management
 
-#### 6. Durée des Études
+- Replacement of missing values with 0 (new programs)
+- Min/max range verification
+- 2025 Scores: 0 to 173.22 points
+- 2024 Scores: 0 to 182.91 points
 
-- **93.3%** des filières durent 3 ans
-- Filières longues (6-9 ans) : Médecine, Pharmacie, Médecine Dentaire (scores >150 points)
+### Cleaning Results
 
-#### 7. Top Filières
-
-- **Plus sélectives** : Principalement Santé (Médecine >160 points, Sciences Infirmières >140 points)
-- **Plus accessibles** : Majoritairement Langues (Français, Anglais ~70 points)
-
-#### 8. Critères d'Orientation
-
-- **Plus fréquent** : "FG+PH" (27.3% des filières)
-- **Sélectivité** : Critères incluant SVT associés aux scores les plus élevés
-
-#### 9. Corrélation 2024-2025
-
-- **Coefficient de corrélation** : r = 0.90 (corrélation FORTE)
-- Les filières conservent globalement leur niveau de sélectivité relatif
-
-#### 10. Évolutions Marquantes
-
-- **Plus grandes baisses** : Filières de Santé (-20 à -36 points)
-- **Plus grandes hausses** : Filières Arts & Design (+jusqu'à 30 points)
-
-### Visualisations Clés
-
-- 📊 **Distributions comparées** : Densités des scores 2024 vs 2025
-- 📍 **Répartition géographique** : Barres horizontales par gouvernorat avec scores moyens
-- 🏛️ **Universités** : Graphique en camembert avec pourcentages
-- 📚 **Domaines** : Boxplots montrant la dispersion des scores par domaine
-- 🎯 **Top filières** : Comparaison visuelle sélectives vs accessibles
-- 📈 **Corrélation** : Scatter plot avec ligne de régression
-- 📉 **Évolutions** : Graphiques en barres des plus grandes variations
+- **240 → 238 rows** (removal of rows with empty Filiere)
+- **10 standardized** and usable columns
+- **Saved data**: `Data/data_cleaned.csv` (UTF-8) and `Data/data_cleaned.rds`
 
 ---
 
-## 💡 Insights et Résultats Clés
+## Phase II: Exploratory Data Analysis (EDA)
 
-### Principales Découvertes
+### Overview: Context of Bac Lettres 2025
 
-1. **Impact limité de la baisse du taux de réussite**
+**The Challenge**: Fewer graduates, same number of places
 
-   - Malgré -5.23 points au bac, l'évolution moyenne des scores est seulement de -0.43 points
-   - 51% des filières ont vu leur score augmenter, suggérant une concentration des meilleurs candidats
+With a success rate dropping from **44.33%** to **39.10%**, competition for university programs should theoretically decrease. The analysis reveals:
 
-2. **Polarisation géographique marquée**
+- **Average evolution**: -0.43 points between 2024 and 2025
+- **47.5%** of programs saw their score decrease
+- **51.3%** of programs saw their score increase
+- **2025 median score**: 104.19 points
 
-   - Grand Tunis concentre près de 40% de l'offre
-   - Inégalité d'accès pour les étudiants des régions intérieures
+### Analyses Performed
 
-3. **Sélectivité par domaine**
+#### 1. Score Accessibility
 
-   - Santé reste très sélective (scores >140 points)
-   - Langues offrent plus d'opportunités (scores ~70-90 points)
+- Comparative descriptive statistics (2024 vs 2025)
+- Score distribution with density visualizations
+- Trend identification (sharp decline, slight decline, stable, slight increase, sharp increase)
 
-4. **Stabilité relative des scores**
-   - Corrélation forte (r=0.90) entre 2024 et 2025
-   - Les filières conservent leur niveau de sélectivité relatif
+#### 2. Geographic Distribution
 
-### Recommandations pour les Bacheliers Lettres 2026
+- **Concentration**: Greater Tunis concentrates 37.4% of programs
+- **Top 3 governorates**: Tunis (89 programs), Sfax (25), Sousse (18)
+- **Inequalities**: Some governorates offer only one or two programs
 
-#### Opportunités à Saisir
+#### 3. University Analysis
 
-| Domaine               | Avantages                              | Score Moyen |
-| --------------------- | -------------------------------------- | ----------- |
-| **Langues**           | Scores accessibles, peu de contraintes | ~90 points  |
-| **Sciences Humaines** | Bonne diversité, débouchés variés      | ~97 points  |
-| **Arts & Design**     | Profils créatifs, options diversifiées | ~104 points |
-| **Communication**     | Secteur en expansion                   | ~100 points |
+- Balanced distribution among 12 universities
+- Top 3: Carthage, Gabès, Sfax (each ~10-11% of programs)
+- Score range by university
 
-#### Filières Sélectives (Préparation Intensive)
+#### 4. Fields of Study
 
-| Filière                  | Score Requis | Contraintes                 |
-| ------------------------ | ------------ | --------------------------- |
-| **Médecine/Santé**       | >160 points  | SVT obligatoire             |
-| **Sciences Infirmières** | >140 points  | Sport + contraintes de sexe |
-| **Prépa Anglais**        | >130 points  | Très demandée               |
-| **Architecture**         | >140 points  | Places limitées             |
+- **Categorization**: 14 identified fields (Health, Languages, Humanities, Arts & Design, etc.)
+- **Selectivity**: Health and Sports remain the most selective (median scores >140 points)
+- **Accessibility**: Languages and Humanities offer more opportunities
 
-#### Stratégie Géographique
+#### 5. Admission Conditions
 
-- **Grand Tunis** (37% des filières) : Plus grand choix mais concurrence élevée
-- **Sfax, Sousse, Monastir** : Alternatives intéressantes avec scores potentiellement plus accessibles
-- **Régions intérieures** : Moins de choix mais opportunités moins connues
+- **68.5%** of programs without particular constraints
+- **31.5%** with constraints (sports, biology, language, age, gender)
+- Most frequent constraints: age limit (8.0%), mandatory biology (6.3%)
+
+#### 6. Study Duration
+
+- **93.3%** of programs last 3 years
+- Long programs (6-9 years): Medicine, Pharmacy, Dental Medicine (scores >150 points)
+
+#### 7. Top Programs
+
+- **Most selective**: Primarily Health (Medicine >160 points, Nursing Sciences >140 points)
+- **Most accessible**: Mainly Languages (French, English ~70 points)
+
+#### 8. Orientation Criteria
+
+- **Most frequent**: "FG+PH" (27.3% of programs)
+- **Selectivity**: Criteria including biology associated with highest scores
+
+#### 9. 2024-2025 Correlation
+
+- **Correlation coefficient**: r = 0.90 (STRONG correlation)
+- Programs generally maintain their relative level of selectivity
+
+#### 10. Notable Changes
+
+- **Largest decreases**: Health programs (-20 to -36 points)
+- **Largest increases**: Arts & Design programs (+up to 30 points)
+
+### Key Visualizations
+
+- **Compared distributions**: 2024 vs 2025 score densities
+- **Geographic distribution**: Horizontal bars by governorate with average scores
+- **Universities**: Pie chart with percentages
+- **Fields**: Boxplots showing score dispersion by field
+- **Top programs**: Visual comparison selective vs accessible
+- **Correlation**: Scatter plot with regression line
+- **Evolutions**: Bar charts of largest variations
 
 ---
 
-## 🛠️ Technologies Utilisées
+## Insights and Key Results
 
-### Analyse et Traitement des Données
+### Main Findings
 
-- **R** (≥4.0) : Langage de programmation statistique
-- **tidyverse** : Manipulation de données (dplyr, tidyr)
-- **ggplot2** : Visualisation de données avancée
-- **stringr** : Manipulation des chaînes de caractères
-- **readxl** : Lecture des fichiers Excel
-- **knitr** : Génération de rapports
-- **viridis** : Palettes de couleurs accessibles
+1. **Limited impact of success rate decline**
 
-### Publication et Présentation
+   - Despite -5.23 points at bac, average score evolution is only -0.43 points
+   - 51% of programs saw their score increase, suggesting concentration of best candidates
 
-- **Quarto** : Système de publication scientifique et technique
-- **HTML** : Format de sortie interactif avec code-folding
-- **Bootstrap** : Framework CSS pour l'interface
-- **Vercel** : Plateforme de déploiement web
+2. **Marked geographic polarization**
+
+   - Greater Tunis concentrates nearly 40% of offerings
+   - Access inequality for students from interior regions
+
+3. **Selectivity by field**
+
+   - Health remains highly selective (scores >140 points)
+   - Languages offer more opportunities (scores ~70-90 points)
+
+4. **Relative score stability**
+   - Strong correlation (r=0.90) between 2024 and 2025
+   - Programs maintain their relative selectivity level
+
+### Recommendations for Lettres Baccalaureate Graduates 2026
+
+#### Opportunities to Seize
+
+| Field                 | Advantages                               | Average Score |
+| --------------------- | ---------------------------------------- | ------------- |
+| **Languages**         | Accessible scores, few constraints       | ~90 points    |
+| **Humanities**        | Good diversity, varied career paths      | ~97 points    |
+| **Arts & Design**     | Creative profiles, diversified options   | ~104 points   |
+| **Communication**     | Expanding sector                         | ~100 points   |
+
+#### Selective Programs (Intensive Preparation)
+
+| Program                  | Required Score | Constraints                    |
+| ------------------------ | -------------- | ------------------------------ |
+| **Medicine/Health**      | >160 points    | Mandatory biology              |
+| **Nursing Sciences**     | >140 points    | Sports + gender constraints    |
+| **English Prep**         | >130 points    | High demand                    |
+| **Architecture**         | >140 points    | Limited places                 |
+
+#### Geographic Strategy
+
+- **Greater Tunis** (37% of programs): Greater choice but high competition
+- **Sfax, Sousse, Monastir**: Interesting alternatives with potentially more accessible scores
+- **Interior regions**: Fewer choices but less known opportunities
 
 ---
 
-## 🚀 Installation et Utilisation
+## Technologies Used
 
-### Prérequis
+### Data Analysis and Processing
 
-- **R** (version 4.0 ou supérieure) : [Télécharger R](https://www.r-project.org)
-- **Quarto** : [Installer Quarto](https://quarto.org/docs/get-started/)
-- **Packages R** : Voir la liste complète dans l'en-tête de `index.qmd`
+- **R** (≥4.0): Statistical programming language
+- **tidyverse**: Data manipulation (dplyr, tidyr)
+- **ggplot2**: Advanced data visualization
+- **stringr**: String manipulation
+- **readxl**: Excel file reading
+- **knitr**: Report generation
+- **viridis**: Accessible color palettes
 
-### Installation des Packages R
+### Publishing and Presentation
+
+- **Quarto**: Scientific and technical publishing system
+- **HTML**: Interactive output format with code-folding
+- **Bootstrap**: CSS framework for interface
+- **Vercel**: Web deployment platform
+
+---
+
+## Installation and Usage
+
+### Prerequisites
+
+- **R** (version 4.0 or higher): [Download R](https://www.r-project.org)
+- **Quarto**: [Install Quarto](https://quarto.org/docs/get-started/)
+- **R Packages**: See complete list in `index.qmd` header
+
+### Installing R Packages
 
 ```r
-# Installer les packages nécessaires
+# Install necessary packages
 install.packages(c(
-  "readxl",      # Lecture Excel
-  "dplyr",       # Manipulation de données
-  "stringr",     # Manipulation de chaînes
-  "tidyr",       # Nettoyage des données
-  "ggplot2",     # Visualisations
-  "scales",      # Formatage des axes
-  "knitr",       # Tableaux formatés
-  "viridis"      # Palettes de couleurs
+  "readxl",      # Excel reading
+  "dplyr",       # Data manipulation
+  "stringr",     # String manipulation
+  "tidyr",       # Data cleaning
+  "ggplot2",     # Visualizations
+  "scales",      # Axis formatting
+  "knitr",       # Formatted tables
+  "viridis"      # Color palettes
 ))
 ```
 
-### Exécution Locale
+### Local Execution
 
-1. **Cloner ou télécharger** le projet
-2. **Ouvrir un terminal** dans le répertoire du projet
-3. **Lancer le rendu** :
+1. **Clone or download** the project
+2. **Open a terminal** in the project directory
+3. **Launch rendering**:
    ```bash
    quarto render index.qmd
    ```
-4. **Ouvrir le résultat** : Le fichier `index.html` sera généré et peut être ouvert dans votre navigateur
+4. **Open the result**: The `index.html` file will be generated and can be opened in your browser
 
-### Build Automatisé (Optionnel)
+### Automated Build (Optional)
 
 ```bash
-# Rendre le script exécutable
+# Make the script executable
 chmod +x build.sh
 
-# Exécuter le build
+# Execute the build
 ./build.sh
 ```
 
 ---
 
-## 📦 Résultats et Livrables
+## Results and Deliverables
 
-### Rapport HTML Interactif
+### Interactive HTML Report
 
-- **Format** : HTML avec navigation fluide
-- **Fonctionnalités** :
-  - Code repliable pour une lecture optimale
-  - Table des matières interactive
-  - Visualisations intégrées
-  - Tableaux de données détaillés
-- **Accès** : [Consulter en ligne](https://r-project-phi.vercel.app/) ou ouvrir `index.html` localement
+- **Format**: HTML with smooth navigation
+- **Features**:
+  - Collapsible code for optimal reading
+  - Interactive table of contents
+  - Integrated visualizations
+  - Detailed data tables
+- **Access**: [View online](https://r-project-phi.vercel.app/) or open `index.html` locally
 
-### Données Nettoyées
+### Cleaned Data
 
-- **`Data/data_cleaned.csv`** : Format CSV avec encodage UTF-8 (pour Excel, analyses)
-- **`Data/data_cleaned.rds`** : Format R natif (préserve les listes de spécialités)
+- **`Data/data_cleaned.csv`**: CSV format with UTF-8 encoding (for Excel, analyses)
+- **`Data/data_cleaned.rds`**: Native R format (preserves specialization lists)
 
-### Scripts Reproductibles
+### Reproducible Scripts
 
-- **`index.qmd`** : Document Quarto complet avec tout le code (nettoyage + EDA)
-- **`Notebooks/cleaning.ipynb`** : Notebook original de nettoyage
-- **`Notebooks/EDA.ipynb`** : Notebook original d'analyse exploratoire
-
----
-
-## 📊 Méthodologie
-
-### Approche
-
-1. **Nettoyage rigoureux** : Standardisation complète des données brutes
-2. **Analyse exploratoire** : Exploration systématique de toutes les dimensions
-3. **Visualisation** : Graphiques clairs et informatifs
-4. **Synthèse** : Conclusions et recommandations actionnables
-
-### Reproducibilité
-
-- Tous les codes sont inclus dans le document Quarto
-- Les données brutes sont fournies
-- Les étapes sont documentées et commentées
-- Les résultats peuvent être reproduits en exécutant `quarto render index.qmd`
+- **`index.qmd`**: Complete Quarto document with all code (cleaning + EDA)
+- **`Notebooks/cleaning.ipynb`**: Original cleaning notebook
+- **`Notebooks/EDA.ipynb`**: Original exploratory analysis notebook
 
 ---
 
-## 🌐 Déploiement
+## Methodology
 
-Le projet est déployé sur **Vercel** et accessible à l'adresse :
+### Approach
 
-**👉 [https://r-project-phi.vercel.app/](https://r-project-phi.vercel.app/)**
+1. **Rigorous cleaning**: Complete standardization of raw data
+2. **Exploratory analysis**: Systematic exploration of all dimensions
+3. **Visualization**: Clear and informative graphics
+4. **Synthesis**: Actionable conclusions and recommendations
+
+### Reproducibility
+
+- All code is included in the Quarto document
+- Raw data is provided
+- Steps are documented and commented
+- Results can be reproduced by executing `quarto render index.qmd`
+
+---
+
+## Deployment
+
+The project is deployed on **Vercel** and accessible at:
+
+**[https://r-project-phi.vercel.app/](https://r-project-phi.vercel.app/)**
 
 ### Configuration
 
-- **Plateforme** : Vercel
-- **Build automatique** : À chaque push sur le dépôt
-- **Configuration** : `vercel.json` pour les paramètres de déploiement
+- **Platform**: Vercel
+- **Automatic build**: On each repository push
+- **Configuration**: `vercel.json` for deployment settings
 
 ---
 
+## License
 
-## 📄 Licence
-
-Ce projet est destiné à des fins **éducatives et de recherche**. Les données sont issues de sources officielles publiques et sont utilisées dans le cadre d'une analyse statistique.
-
----
-
-## 📚 Ressources Complémentaires
-
-- [Documentation Quarto](https://quarto.org/docs/)
-- [Guide d'Orientation RNU](https://guide-orientation.rnu.tn/index.php)
-- [Documentation tidyverse](https://www.tidyverse.org/)
-- [Documentation ggplot2](https://ggplot2.tidyverse.org/)
+This project is intended for **educational and research purposes**. Data comes from official public sources and is used as part of a statistical analysis.
 
 ---
 
-**⭐ Si ce projet vous est utile, n'hésitez pas à le partager !**
+## Additional Resources
+
+- [Quarto Documentation](https://quarto.org/docs/)
+- [RNU Orientation Guide](https://guide-orientation.rnu.tn/index.php)
+- [tidyverse Documentation](https://www.tidyverse.org/)
+- [ggplot2 Documentation](https://ggplot2.tidyverse.org/)
+
+---
+
+**If this project is useful to you, feel free to share it!**
